@@ -1,7 +1,17 @@
-import { Notice } from "obsidian";
-import { uploadToR2, R2UploadError } from "./r2-client";
+import { uploadToR2 } from "./r2-client";
 import { compressImage, isCompressible, CompressError } from "./compressor";
 import type { R2UploaderSettings, UploadResult } from "./types";
+import {
+	formatProgressTag,
+	getUploadErrorMessage,
+	showSuccessNotice,
+	showNotice,
+} from "./feedback";
+
+interface UploadPlaceholder {
+	id: string;
+	text: string;
+}
 
 /**
  * 清理上傳路徑前綴。
@@ -62,15 +72,40 @@ export function isImageType(mimeType: string): boolean {
 }
 
 /**
- * 產生佔位文字，格式：![Uploading file... _id]()
+ * 產生佔位文字，格式：![Uploading filename #id...]()
  * 空括號避免 Obsidian 嘗試載入不存在的檔案。
  */
-export function createPlaceholder(): string {
-	const id = `${Date.now().toString(36)}${Math.random()
-		.toString(36)
-		.substring(2, 6)}`;
+export function createPlaceholder(fileName: string): UploadPlaceholder {
+	const sanitizedName = fileName
+		.replace(/[\r\n]/g, " ")
+		.replace(/\[/g, "")
+		.replace(/\]/g, "")
+		.trim();
+	const shortenedName =
+		sanitizedName.length > 24 ? `${sanitizedName.slice(0, 24)}…` : sanitizedName;
 
-	return `![Uploading file... _${id}]()`;
+	const randomBuffer = new Uint32Array(2);
+	crypto.getRandomValues(randomBuffer);
+	const randomFirst = randomBuffer[0] ?? 0;
+	const randomSecond = randomBuffer[1] ?? 0;
+	const id = `${randomFirst.toString(36)}${randomSecond.toString(36)}`;
+
+	return {
+		id,
+		text: `![Uploading ${shortenedName} #${id}...]()`,
+	};
+}
+
+export function replacePlaceholderById(
+	content: string,
+	placeholderId: string,
+	replacement: string,
+): string {
+	const escapedId = placeholderId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+	const placeholderPattern = new RegExp(
+		`!\\[Uploading [^\\]\\n\\r]* #${escapedId}\\.\\.\\.\\]\\(\\)`,
+	);
+	return content.replace(placeholderPattern, replacement);
 }
 
 /**
@@ -99,6 +134,7 @@ export function createMarkdownLink(
 export async function processFile(
 	file: File,
 	settings: R2UploaderSettings,
+	progress?: { current: number; total: number },
 ): Promise<UploadResult> {
 	const baseName = generateFileName(file.name);
 	const uploadPath = sanitizeUploadPath(settings.r2UploadPath);
@@ -131,14 +167,13 @@ export async function processFile(
 			const savedPercent = Math.round(
 				(1 - compressed.compressedSize / compressed.originalSize) * 100,
 			);
-			new Notice(
-				`壓縮完成：${file.name}（節省 ${savedPercent}%）`,
-				3000,
+			showSuccessNotice(
+				`${file.name} 已壓縮 (節省 ${savedPercent}%)${formatProgressTag(progress)}`,
 			);
 		} catch (err) {
 			// 壓縮失敗不中斷流程，用原檔繼續上傳
 			if (err instanceof CompressError) {
-				new Notice(`壓縮失敗，使用原檔上傳：${err.message}`, 5000);
+				showNotice(`壓縮失敗，改用原檔：${err.message}${formatProgressTag(progress)}`);
 			}
 		}
 	}
@@ -148,10 +183,8 @@ export async function processFile(
 		const url = await uploadToR2(fileData, fileName, mimeType, settings);
 		return { success: true, url, fileName: file.name };
 	} catch (err) {
-		const message =
-			err instanceof R2UploadError
-				? err.message
-				: `上傳失敗：${String(err)}`;
+		console.error("[R2Uploader] upload failed", err);
+		const message = getUploadErrorMessage(err);
 		return { success: false, error: message, fileName: file.name };
 	}
 }

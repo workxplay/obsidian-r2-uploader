@@ -1,6 +1,5 @@
 import {
 	App,
-	Notice,
 	PluginSettingTab,
 	Setting,
 	TextComponent,
@@ -10,6 +9,12 @@ import type R2UploaderPlugin from "./main";
 import { testR2Connection } from "./r2-client";
 import { testTinypngApiKey } from "./compressor";
 import { sanitizeUploadPath } from "./uploader";
+import {
+	getR2ConnectionErrorMessage,
+	getTinypngErrorMessage,
+	showNotice,
+	showSuccessNotice,
+} from "./feedback";
 
 /* eslint-disable obsidianmd/ui/sentence-case */
 
@@ -62,7 +67,7 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 			.setDesc("Cloudflare 帳戶 ID")
 			.addText((text) =>
 				text
-					.setPlaceholder("例如：a1b2c3d4e5f6...")
+					.setPlaceholder("8e3a1b4c9d5f...")
 					.setValue(this.plugin.settings.r2AccountId)
 					.onChange(async (value) => {
 						this.plugin.settings.r2AccountId = value.trim();
@@ -72,7 +77,7 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Access Key ID")
-			.setDesc("R2 API Token Access Key ID")
+			.setDesc("R2 API Token 的 Access Key")
 			.addText((text) => {
 				addPasswordToggle(text);
 				text
@@ -86,7 +91,7 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Secret Access Key")
-			.setDesc("R2 API Token Secret Access Key")
+			.setDesc("R2 API Token 的 Secret Key")
 			.addText((text) => {
 				addPasswordToggle(text);
 				text
@@ -103,7 +108,7 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 			.setDesc("R2 儲存桶名稱")
 			.addText((text) =>
 				text
-					.setPlaceholder("例如：obsidian-assets")
+					.setPlaceholder("my-obsidian-images")
 					.setValue(this.plugin.settings.r2BucketName)
 					.onChange(async (value) => {
 						this.plugin.settings.r2BucketName = value.trim();
@@ -111,25 +116,47 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		new Setting(containerEl)
+		let publicUrlErrorEl: HTMLElement | null = null;
+
+		const updatePublicUrlError = (settingEl: HTMLElement, url: string) => {
+			const hasError = Boolean(url) && !/^https?:\/\//i.test(url);
+
+			if (hasError && !publicUrlErrorEl) {
+				publicUrlErrorEl = settingEl.createEl("div", {
+					text: "請以 https:// 開頭",
+					cls: "setting-error-message",
+				});
+				settingEl.addClass("has-error");
+			} else if (!hasError && publicUrlErrorEl) {
+				publicUrlErrorEl.remove();
+				publicUrlErrorEl = null;
+				settingEl.removeClass("has-error");
+			}
+		};
+
+		const publicUrlSetting = new Setting(containerEl)
 			.setName("Public URL")
-			.setDesc("自訂網域或 r2.dev 公開網址 (用於產生圖片連結)")
+			.setDesc("自訂網域或 r2.dev 公開網址")
 			.addText((text) =>
 				text
-					.setPlaceholder("例如：https://pub-xxx.r2.dev")
+					.setPlaceholder("https://img.yourdomain.com")
 					.setValue(this.plugin.settings.r2PublicUrl)
 					.onChange(async (value) => {
-						this.plugin.settings.r2PublicUrl = value.trim().replace(/\/+$/, "");
+						const trimmed = value.trim().replace(/\/+$/, "");
+						this.plugin.settings.r2PublicUrl = trimmed;
 						await this.plugin.saveSettings();
+						updatePublicUrlError(publicUrlSetting.settingEl, trimmed);
 					}),
 			);
 
+		updatePublicUrlError(publicUrlSetting.settingEl, this.plugin.settings.r2PublicUrl);
+
 		new Setting(containerEl)
 			.setName("Upload Path")
-			.setDesc("R2 bucket 中的上傳路徑前綴 (例如：assets, assets/images)，留空則上傳到 bucket 根目錄")
+			.setDesc("路徑前綴，留空則上傳到根目錄")
 			.addText((text) =>
 				text
-					.setPlaceholder("例如：assets")
+					.setPlaceholder("images")
 					.setValue(this.plugin.settings.r2UploadPath)
 					.onChange(async (value) => {
 						this.plugin.settings.r2UploadPath = sanitizeUploadPath(value);
@@ -139,29 +166,30 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("驗證 R2 連線")
+			.setName("測試連線")
 			.setDesc("測試憑證和 Bucket 是否設定正確")
 			.addButton((button) => {
-				button.setButtonText("測試連線").setCta();
+				button.setButtonText("測試");
 				button.onClick(async () => {
 					const s = this.plugin.settings;
 
 					if (!s.r2AccountId || !s.r2AccessKeyId || !s.r2SecretAccessKey || !s.r2BucketName) {
-						new Notice("請先填寫所有 R2 欄位");
+						showNotice("請先填寫所有 R2 欄位");
 						return;
 					}
 
 					button.setDisabled(true);
-					button.setButtonText("測試中...");
+					button.setButtonText("測試中…");
 
 					try {
 						await testR2Connection(s);
-						new Notice("R2 連線成功！");
+						showSuccessNotice("R2 連線成功！");
 					} catch (e) {
-						new Notice(`R2 連線失敗：${e instanceof Error ? e.message : "未知錯誤"}`);
+						console.error("[R2Uploader] R2 connection test failed", e);
+						showNotice(getR2ConnectionErrorMessage(e));
 					} finally {
 						button.setDisabled(false);
-						button.setButtonText("測試連線");
+						button.setButtonText("測試");
 					}
 				});
 			});
@@ -193,27 +221,28 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName("驗證 API Key")
-			.setDesc("確認 TinyPNG API Key 是否有效")
+			.setName("測試 API Key")
+			.setDesc("確認 API Key 是否有效")
 			.addButton((button) => {
-				button.setButtonText("測試 TinyPNG");
+				button.setButtonText("測試");
 				button.onClick(async () => {
 					if (!this.plugin.settings.tinypngApiKey) {
-						new Notice("請先填寫 TinyPNG API Key");
+						showNotice("請先填寫 TinyPNG API Key");
 						return;
 					}
 
 					button.setDisabled(true);
-					button.setButtonText("驗證中...");
+					button.setButtonText("測試中…");
 
 					try {
 						await testTinypngApiKey(this.plugin.settings.tinypngApiKey);
-						new Notice("TinyPNG API Key 有效！");
+						showSuccessNotice("TinyPNG API Key 有效！");
 					} catch (e) {
-						new Notice(`TinyPNG 驗證失敗：${e instanceof Error ? e.message : "未知錯誤"}`);
+						console.error("[R2Uploader] TinyPNG API key test failed", e);
+						showNotice(getTinypngErrorMessage(e));
 					} finally {
 						button.setDisabled(false);
-						button.setButtonText("測試 TinyPNG");
+						button.setButtonText("測試");
 					}
 				});
 			});
@@ -223,7 +252,7 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("自動上傳")
-			.setDesc("貼上或拖放檔案時，自動上傳到 R2 (關閉後需手動觸發)")
+			.setDesc("貼上或拖放時自動上傳到 R2")
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.autoUploadOnPaste)
@@ -235,7 +264,7 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("上傳前壓縮")
-			.setDesc("上傳前透過 TinyPNG 壓縮圖片 (需要有效的 API Key)")
+			.setDesc("透過 TinyPNG 壓縮圖片 (需有效 API Key)")
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.compressBeforeUpload)

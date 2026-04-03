@@ -1,3 +1,42 @@
 .r2-uploader-settings .setting-item-heading .setting-item-name {
 	font-size: 1.25em;
 }
+
+.r2-uploader-settings .setting-item-heading:not(:first-child) {
+	position: relative;
+	margin-top: 2.5em;
+	padding-top: 1.25em;
+	border-top: none;
+	box-shadow: none;
+}
+
+.r2-uploader-settings .setting-item-heading:not(:first-child)::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 1px;
+	background-color: var(--background-modifier-border);
+}
+
+.r2-uploader-settings .setting-item-description {
+	font-size: 0.875em;
+}
+
+.r2-uploader-settings .setting-item-control input[type="text"],
+.r2-uploader-settings .setting-item-control input[type="password"] {
+	width: 100%;
+	min-width: 200px;
+}
+
+.r2-uploader-settings .setting-item.has-error {
+	flex-wrap: wrap;
+}
+
+.r2-uploader-settings .setting-error-message {
+	color: var(--text-error);
+	font-size: var(--font-smallest);
+	margin-top: 4px;
+	width: 100%;
+}

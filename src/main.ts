@@ -1,4 +1,4 @@
-import { Editor, Notice, Plugin } from "obsidian";
+import { Editor, Plugin } from "obsidian";
 import { R2UploaderSettingTab } from "./settings";
 import {
 	processFile,
@@ -6,9 +6,15 @@ import {
 	isImageType,
 	createPlaceholder,
 	createMarkdownLink,
+	replacePlaceholderById,
 } from "./uploader";
 import { DEFAULT_SETTINGS } from "./types";
 import type { R2UploaderSettings } from "./types";
+import {
+	formatProgressTag,
+	showNotice,
+	showSuccessNotice,
+} from "./feedback";
 
 export default class R2UploaderPlugin extends Plugin {
 	settings: R2UploaderSettings;
@@ -44,7 +50,7 @@ export default class R2UploaderPlugin extends Plugin {
 			id: "upload-clipboard-files",
 			name: "Upload clipboard files to cloudflare r2",
 			editorCallback: (editor: Editor) => {
-				new Notice("請使用 Ctrl/Cmd+V 貼上檔案來上傳");
+				showNotice("請先複製檔案再貼上");
 			},
 		});
 	}
@@ -63,7 +69,7 @@ export default class R2UploaderPlugin extends Plugin {
 		if (!files || files.length === 0) return;
 
 		if (!isR2ConfigComplete(this.settings)) {
-			new Notice("Please complete r2 connection settings first.");
+			showNotice("請先完成 R2 連線設定");
 			return;
 		}
 
@@ -72,46 +78,63 @@ export default class R2UploaderPlugin extends Plugin {
 	}
 
 	private async handleFiles(files: File[], editor: Editor): Promise<void> {
-		const entries: { placeholder: string; file: File; isImage: boolean }[] = [];
+		const entries: {
+			placeholderId: string;
+			file: File;
+			isImage: boolean;
+		}[] = [];
 
 		// Step 1: 為每個檔案插入佔位文字
 		for (const file of files) {
 			const isImage = isImageType(file.type);
-			const placeholder = createPlaceholder();
-			entries.push({ placeholder, file, isImage });
-			editor.replaceSelection(`${placeholder}\n`);
+			const placeholder = createPlaceholder(file.name);
+			entries.push({
+				placeholderId: placeholder.id,
+				file,
+				isImage,
+			});
+			editor.replaceSelection(`${placeholder.text}\n`);
 		}
 
 		// Step 2: 並行上傳，但循序替換 placeholder（避免 race condition）
+		const total = entries.length;
 		const results = await Promise.all(
-			entries.map(({ file }) => processFile(file, this.settings)),
+			entries.map(({ file }, index) =>
+				processFile(file, this.settings, { current: index + 1, total }),
+			),
 		);
 
+		let content = editor.getValue();
+
 		for (let i = 0; i < entries.length; i++) {
-			const { placeholder, file, isImage } = entries[i]!;
+			const { placeholderId, file, isImage } = entries[i]!;
 			const result = results[i]!;
-			const content = editor.getValue();
+			const progress = formatProgressTag({ current: i + 1, total });
 
 			if (result.success && result.url) {
 				const markdownLink = createMarkdownLink(result.url, file.name, isImage);
-				editor.setValue(content.replace(placeholder, markdownLink));
+				content = replacePlaceholderById(content, placeholderId, markdownLink);
+				if (total > 1) {
+					showSuccessNotice(`${file.name} 上傳成功${progress}`);
+				}
 			} else {
-				editor.setValue(content.replace(placeholder, ""));
-				new Notice(`上傳失敗：${result.error}`, 8000);
+				content = replacePlaceholderById(content, placeholderId, "");
+				showNotice(`${file.name} 上傳失敗：${result.error}${progress}`);
 			}
 		}
 
-		// Step 3: 顯示總結通知
-		const successCount = results.filter((r) => r.success).length;
-		const failCount = results.length - successCount;
+		editor.setValue(content);
 
-		if (failCount === 0) {
-			new Notice(`已上傳 ${successCount} 個檔案`, 3000);
-		} else {
-			new Notice(
-				`上傳完成：${successCount} 成功，${failCount} 失敗`,
-				5000,
-			);
+		// Step 3: 多檔時顯示總結通知，單檔不顯示
+		if (results.length > 1) {
+			const successCount = results.filter((r) => r.success).length;
+			const failCount = results.length - successCount;
+
+			if (failCount === 0) {
+				showSuccessNotice(`已上傳 ${successCount} 個檔案`);
+			} else {
+				showNotice(`上傳完成：${successCount} 成功 / ${failCount} 失敗`);
+			}
 		}
 	}
 
