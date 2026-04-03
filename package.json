@@ -1,0 +1,30 @@
+{
+  "name": "obsidian-r2-uploader",
+  "version": "0.1.0",
+  "description": "Automatically compress and upload images to Cloudflare R2 when pasting or dropping files in Obsidian.",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "version": "node version-bump.mjs && git add manifest.json versions.json",
+    "lint": "eslint ."
+  },
+  "keywords": ["obsidian", "cloudflare", "r2", "image-upload"],
+  "license": "MIT",
+  "devDependencies": {
+    "@eslint/js": "9.30.1",
+    "@types/node": "^16.11.6",
+    "esbuild": "0.25.5",
+    "eslint-plugin-obsidianmd": "0.1.9",
+    "globals": "14.0.0",
+    "jiti": "2.6.1",
+    "tslib": "2.4.0",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "8.35.1"
+  },
+  "dependencies": {
+    "obsidian": "latest",
+    "aws4fetch": "^1.0.20"
+  }
+}
