@@ -33,11 +33,10 @@
 
 ### BRAT（Beta 測試）
 
-1. 安裝 [BRAT](https://github.com/TfTHacker/obsidian42-brat) plugin
-2. Settings → BRAT → Add Beta plugin
-3. 輸入：`https://github.com/pamcy/obsidian-r2-uploader`
-4. BRAT 會自動下載最新 Release 並安裝
-5. 安裝完成後，重新載入 Obsidian（Cmd/Ctrl+R）讓 plugin 生效
+1. 在 Obsidian Settings → Community plugins → Browse，搜尋 **BRAT** 並安裝
+2. Settings → BRAT → Add Beta plugin，輸入：`https://github.com/pamcy/obsidian-r2-uploader`
+3. BRAT 會自動下載最新 Release 並安裝
+4. 重新載入 Obsidian（Cmd/Ctrl+P → 搜尋「Reload app without saving」）讓 plugin 生效
 
 ### Community Plugins（正式上架專用）
 
@@ -47,7 +46,7 @@
 2. 關閉 Restricted mode
 3. 點選 Browse，搜尋 **R2 Uploader**
 4. 點選 Install → Enable
-5. 重新載入 Obsidian（Cmd/Ctrl+R）讓 plugin 生效
+5. 重新載入 Obsidian（Cmd/Ctrl+P → 搜尋「Reload app without saving」）讓 plugin 生效
 
 ## 使用前準備
 
