@@ -42,7 +42,7 @@ export default class R2UploaderPlugin extends Plugin {
 		// 註冊手動上傳指令
 		this.addCommand({
 			id: "upload-clipboard-files",
-			name: "Upload clipboard files to R2",
+			name: "Upload clipboard files to cloudflare r2",
 			editorCallback: (editor: Editor) => {
 				new Notice("請使用 Ctrl/Cmd+V 貼上檔案來上傳");
 			},
@@ -58,11 +58,11 @@ export default class R2UploaderPlugin extends Plugin {
 		if (!this.settings.autoUploadOnPaste) return;
 		if (!files || files.length === 0) return;
 		if (!isR2ConfigComplete(this.settings)) {
-			new Notice("R2 Uploader：請先在設定中填寫 R2 連線資訊");
+			new Notice("Please complete r2 connection settings first.");
 			return;
 		}
 		evt.preventDefault();
-		this.handleFiles(Array.from(files), editor);
+		void this.handleFiles(Array.from(files), editor);
 	}
 
 	private async handleFiles(files: File[], editor: Editor): Promise<void> {
@@ -73,7 +73,7 @@ export default class R2UploaderPlugin extends Plugin {
 			const isImage = isImageType(file.type);
 			const placeholder = createPlaceholder();
 			entries.push({ placeholder, file, isImage });
-			editor.replaceSelection(placeholder + "\n");
+			editor.replaceSelection(`${placeholder}\n`);
 		}
 
 		// Step 2: 並行上傳，但循序替換 placeholder（避免 race condition）
@@ -110,10 +110,15 @@ export default class R2UploaderPlugin extends Plugin {
 	}
 
 	async loadSettings(): Promise<void> {
+		const rawData: unknown = await this.loadData();
+		const savedSettings: Partial<R2UploaderSettings> =
+			rawData && typeof rawData === "object"
+				? (rawData as Partial<R2UploaderSettings>)
+				: {};
 		this.settings = Object.assign(
 			{},
 			DEFAULT_SETTINGS,
-			await this.loadData(),
+			savedSettings,
 		);
 	}
 

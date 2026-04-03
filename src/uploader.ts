@@ -1,7 +1,6 @@
 import { Notice } from "obsidian";
-import { uploadToR2 } from "./r2-client";
+import { uploadToR2, R2UploadError } from "./r2-client";
 import { compressImage, isCompressible, CompressError } from "./compressor";
-import { R2UploadError } from "./r2-client";
 import type { R2UploaderSettings, UploadResult } from "./types";
 
 /**
@@ -67,7 +66,7 @@ export function isImageType(mimeType: string): boolean {
  * 空括號避免 Obsidian 嘗試載入不存在的檔案。
  */
 export function createPlaceholder(): string {
-	const id = Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
+	const id = `${Date.now().toString(36)}${Math.random().toString(36).substring(2, 6)}`;
 	return `![Uploading file... _${id}]()`;
 }
 

@@ -8,7 +8,8 @@
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
     "version": "node version-bump.mjs && git add manifest.json versions.json",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "keywords": ["obsidian", "cloudflare", "r2", "image-upload"],
   "license": "MIT",
@@ -16,6 +17,7 @@
     "@eslint/js": "9.30.1",
     "@types/node": "^16.11.6",
     "esbuild": "0.25.5",
+    "eslint": "9.39.1",
     "eslint-plugin-obsidianmd": "0.1.9",
     "globals": "14.0.0",
     "jiti": "2.6.1",

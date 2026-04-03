@@ -19,7 +19,7 @@ export class CompressError extends Error {
  * 產生 TinyPNG API 的 Basic Auth header。
  */
 function getTinypngAuthHeader(apiKey: string): string {
-	return "Basic " + btoa("api:" + apiKey);
+	return `Basic ${btoa(`api:${apiKey}`)}`;
 }
 
 /**

@@ -11,6 +11,8 @@ import { testR2Connection } from "./r2-client";
 import { testTinypngApiKey } from "./compressor";
 import { sanitizeUploadPath } from "./uploader";
 
+/* eslint-disable obsidianmd/ui/sentence-case */
+
 /**
  * 將 TextComponent 轉為密碼欄位，並加上顯示/隱藏切換按鈕。
  */
