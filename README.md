@@ -21,11 +21,7 @@ Obsidian plugin — 貼上或拖放檔案時，自動透過 [TinyPNG](https://ti
 
 ### Community Plugins
 
-> 尚未正式上架，請先使用 BRAT 安裝。
-
-1. Settings → Community plugins → Browse，搜尋 **R2 Uploader**
-2. Install → Enable
-3. Cmd/Ctrl+P → 搜尋「Reload app without saving」重新載入
+> 尚未正式上架，暫不提供 Community Plugins 安裝步驟，請先使用 BRAT 安裝。
 
 ## 設定
 

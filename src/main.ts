@@ -6,6 +6,7 @@ import {
 	isImageType,
 	createPlaceholder,
 	createMarkdownLink,
+	replacePlaceholderById,
 } from "./uploader";
 import { DEFAULT_SETTINGS } from "./types";
 import type { R2UploaderSettings } from "./types";
@@ -77,14 +78,22 @@ export default class R2UploaderPlugin extends Plugin {
 	}
 
 	private async handleFiles(files: File[], editor: Editor): Promise<void> {
-		const entries: { placeholder: string; file: File; isImage: boolean }[] = [];
+		const entries: {
+			placeholderId: string;
+			file: File;
+			isImage: boolean;
+		}[] = [];
 
 		// Step 1: 為每個檔案插入佔位文字
 		for (const file of files) {
 			const isImage = isImageType(file.type);
 			const placeholder = createPlaceholder(file.name);
-			entries.push({ placeholder, file, isImage });
-			editor.replaceSelection(`${placeholder}\n`);
+			entries.push({
+				placeholderId: placeholder.id,
+				file,
+				isImage,
+			});
+			editor.replaceSelection(`${placeholder.text}\n`);
 		}
 
 		// Step 2: 並行上傳，但循序替換 placeholder（避免 race condition）
@@ -98,18 +107,18 @@ export default class R2UploaderPlugin extends Plugin {
 		let content = editor.getValue();
 
 		for (let i = 0; i < entries.length; i++) {
-			const { placeholder, file, isImage } = entries[i]!;
+			const { placeholderId, file, isImage } = entries[i]!;
 			const result = results[i]!;
 			const progress = formatProgressTag({ current: i + 1, total });
 
 			if (result.success && result.url) {
 				const markdownLink = createMarkdownLink(result.url, file.name, isImage);
-				content = content.replace(placeholder, markdownLink);
+				content = replacePlaceholderById(content, placeholderId, markdownLink);
 				if (total > 1) {
 					showSuccessNotice(`${file.name} 上傳成功${progress}`);
 				}
 			} else {
-				content = content.replace(placeholder, "");
+				content = replacePlaceholderById(content, placeholderId, "");
 				showNotice(`${file.name} 上傳失敗：${result.error}${progress}`);
 			}
 		}

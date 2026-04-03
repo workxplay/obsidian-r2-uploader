@@ -8,6 +8,11 @@ import {
 	showNotice,
 } from "./feedback";
 
+interface UploadPlaceholder {
+	id: string;
+	text: string;
+}
+
 /**
  * 清理上傳路徑前綴。
  * 移除前後 /、連續 /、不允許的字元。
@@ -67,13 +72,40 @@ export function isImageType(mimeType: string): boolean {
 }
 
 /**
- * 產生佔位文字，格式：![Uploading filename...]()
+ * 產生佔位文字，格式：![Uploading filename #id...]()
  * 空括號避免 Obsidian 嘗試載入不存在的檔案。
  */
-export function createPlaceholder(fileName: string): string {
-	const shortenedName = fileName.length > 24 ? `${fileName.slice(0, 24)}…` : fileName;
-	const id = Math.random().toString(36).slice(2, 10);
-	return `![Uploading ${shortenedName} #${id}...]()`;
+export function createPlaceholder(fileName: string): UploadPlaceholder {
+	const sanitizedName = fileName
+		.replace(/[\r\n]/g, " ")
+		.replace(/\[/g, "")
+		.replace(/\]/g, "")
+		.trim();
+	const shortenedName =
+		sanitizedName.length > 24 ? `${sanitizedName.slice(0, 24)}…` : sanitizedName;
+
+	const randomBuffer = new Uint32Array(2);
+	crypto.getRandomValues(randomBuffer);
+	const randomFirst = randomBuffer[0] ?? 0;
+	const randomSecond = randomBuffer[1] ?? 0;
+	const id = `${randomFirst.toString(36)}${randomSecond.toString(36)}`;
+
+	return {
+		id,
+		text: `![Uploading ${shortenedName} #${id}...]()`,
+	};
+}
+
+export function replacePlaceholderById(
+	content: string,
+	placeholderId: string,
+	replacement: string,
+): string {
+	const escapedId = placeholderId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+	const placeholderPattern = new RegExp(
+		`!\\[Uploading [^\\]\\n\\r]* #${escapedId}\\.\\.\\.\\]\\(\\)`,
+	);
+	return content.replace(placeholderPattern, replacement);
 }
 
 /**
