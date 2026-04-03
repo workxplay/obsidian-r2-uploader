@@ -1,4 +1,4 @@
-import { Editor, Notice, Plugin } from "obsidian";
+import { Editor, Plugin } from "obsidian";
 import { R2UploaderSettingTab } from "./settings";
 import {
 	processFile,
@@ -9,6 +9,11 @@ import {
 } from "./uploader";
 import { DEFAULT_SETTINGS } from "./types";
 import type { R2UploaderSettings } from "./types";
+import {
+	formatProgressTag,
+	showNotice,
+	showSuccessNotice,
+} from "./feedback";
 
 export default class R2UploaderPlugin extends Plugin {
 	settings: R2UploaderSettings;
@@ -44,7 +49,7 @@ export default class R2UploaderPlugin extends Plugin {
 			id: "upload-clipboard-files",
 			name: "Upload clipboard files to cloudflare r2",
 			editorCallback: (editor: Editor) => {
-				new Notice("請先複製檔案再貼上");
+				showNotice("請先複製檔案再貼上");
 			},
 		});
 	}
@@ -63,7 +68,7 @@ export default class R2UploaderPlugin extends Plugin {
 		if (!files || files.length === 0) return;
 
 		if (!isR2ConfigComplete(this.settings)) {
-			new Notice("請先完成 R2 連線設定"); // eslint-disable-line obsidianmd/ui/sentence-case
+			showNotice("請先完成 R2 連線設定");
 			return;
 		}
 
@@ -95,13 +100,17 @@ export default class R2UploaderPlugin extends Plugin {
 		for (let i = 0; i < entries.length; i++) {
 			const { placeholder, file, isImage } = entries[i]!;
 			const result = results[i]!;
+			const progress = formatProgressTag({ current: i + 1, total });
 
 			if (result.success && result.url) {
 				const markdownLink = createMarkdownLink(result.url, file.name, isImage);
 				content = content.replace(placeholder, markdownLink);
+				if (total > 1) {
+					showSuccessNotice(`${file.name} 上傳成功${progress}`);
+				}
 			} else {
 				content = content.replace(placeholder, "");
-				new Notice(`${file.name} 上傳失敗：${result.error}`, 5000);
+				showNotice(`${file.name} 上傳失敗：${result.error}${progress}`);
 			}
 		}
 
@@ -113,12 +122,9 @@ export default class R2UploaderPlugin extends Plugin {
 			const failCount = results.length - successCount;
 
 			if (failCount === 0) {
-				new Notice(`已上傳 ${successCount} 個檔案`, 3000);
+				showSuccessNotice(`已上傳 ${successCount} 個檔案`);
 			} else {
-				new Notice(
-					`上傳完成：${successCount} 成功 / ${failCount} 失敗`,
-					5000,
-				);
+				showNotice(`上傳完成：${successCount} 成功 / ${failCount} 失敗`);
 			}
 		}
 	}

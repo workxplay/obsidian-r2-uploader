@@ -1,7 +1,12 @@
-import { Notice } from "obsidian";
-import { uploadToR2, R2UploadError } from "./r2-client";
+import { uploadToR2 } from "./r2-client";
 import { compressImage, isCompressible, CompressError } from "./compressor";
 import type { R2UploaderSettings, UploadResult } from "./types";
+import {
+	formatProgressTag,
+	getUploadErrorMessage,
+	showSuccessNotice,
+	showNotice,
+} from "./feedback";
 
 /**
  * 清理上傳路徑前綴。
@@ -66,8 +71,9 @@ export function isImageType(mimeType: string): boolean {
  * 空括號避免 Obsidian 嘗試載入不存在的檔案。
  */
 export function createPlaceholder(fileName: string): string {
-	const id = Math.random().toString(36).substring(2, 6);
-	return `![Uploading ${fileName} #${id}...]()`;
+	const shortenedName = fileName.length > 24 ? `${fileName.slice(0, 24)}…` : fileName;
+	const id = Math.random().toString(36).slice(2, 10);
+	return `![Uploading ${shortenedName} #${id}...]()`;
 }
 
 /**
@@ -84,10 +90,6 @@ export function createMarkdownLink(
 		return `![](${url})`;
 	}
 	return `[${fileName}](${url})`;
-}
-
-function formatProgressTag(progress?: { current: number; total: number }): string {
-	return progress && progress.total > 1 ? ` [${progress.current}/${progress.total}]` : "";
 }
 
 /**
@@ -133,14 +135,13 @@ export async function processFile(
 			const savedPercent = Math.round(
 				(1 - compressed.compressedSize / compressed.originalSize) * 100,
 			);
-			new Notice(
+			showSuccessNotice(
 				`${file.name} 已壓縮 (節省 ${savedPercent}%)${formatProgressTag(progress)}`,
-				3000,
 			);
 		} catch (err) {
 			// 壓縮失敗不中斷流程，用原檔繼續上傳
 			if (err instanceof CompressError) {
-				new Notice(`壓縮失敗，改用原檔：${err.message}${formatProgressTag(progress)}`, 5000);
+				showNotice(`壓縮失敗，改用原檔：${err.message}${formatProgressTag(progress)}`);
 			}
 		}
 	}
@@ -150,10 +151,8 @@ export async function processFile(
 		const url = await uploadToR2(fileData, fileName, mimeType, settings);
 		return { success: true, url, fileName: file.name };
 	} catch (err) {
-		const message =
-			err instanceof R2UploadError
-				? err.message
-				: `上傳失敗：${String(err)}`;
+		console.error("[R2Uploader] upload failed", err);
+		const message = getUploadErrorMessage(err);
 		return { success: false, error: message, fileName: file.name };
 	}
 }

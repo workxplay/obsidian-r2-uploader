@@ -1,6 +1,5 @@
 import {
 	App,
-	Notice,
 	PluginSettingTab,
 	Setting,
 	TextComponent,
@@ -10,6 +9,12 @@ import type R2UploaderPlugin from "./main";
 import { testR2Connection } from "./r2-client";
 import { testTinypngApiKey } from "./compressor";
 import { sanitizeUploadPath } from "./uploader";
+import {
+	getR2ConnectionErrorMessage,
+	getTinypngErrorMessage,
+	showNotice,
+	showSuccessNotice,
+} from "./feedback";
 
 /* eslint-disable obsidianmd/ui/sentence-case */
 
@@ -147,7 +152,7 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 					const s = this.plugin.settings;
 
 					if (!s.r2AccountId || !s.r2AccessKeyId || !s.r2SecretAccessKey || !s.r2BucketName) {
-						new Notice("請先填寫所有 R2 欄位");
+						showNotice("請先填寫所有 R2 欄位");
 						return;
 					}
 
@@ -156,9 +161,10 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 
 					try {
 						await testR2Connection(s);
-						new Notice("R2 連線成功！");
+						showSuccessNotice("R2 連線成功！");
 					} catch (e) {
-						new Notice(`R2 連線失敗：${e instanceof Error ? e.message : "未知錯誤"}`);
+						console.error("[R2Uploader] R2 connection test failed", e);
+						showNotice(getR2ConnectionErrorMessage(e));
 					} finally {
 						button.setDisabled(false);
 						button.setButtonText("測試");
@@ -199,7 +205,7 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 				button.setButtonText("測試");
 				button.onClick(async () => {
 					if (!this.plugin.settings.tinypngApiKey) {
-						new Notice("請先填寫 TinyPNG API Key");
+						showNotice("請先填寫 TinyPNG API Key");
 						return;
 					}
 
@@ -208,9 +214,10 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 
 					try {
 						await testTinypngApiKey(this.plugin.settings.tinypngApiKey);
-						new Notice("TinyPNG API Key 有效！");
+						showSuccessNotice("TinyPNG API Key 有效！");
 					} catch (e) {
-						new Notice(`TinyPNG 驗證失敗：${e instanceof Error ? e.message : "未知錯誤"}`);
+						console.error("[R2Uploader] TinyPNG API key test failed", e);
+						showNotice(getTinypngErrorMessage(e));
 					} finally {
 						button.setDisabled(false);
 						button.setButtonText("測試");
