@@ -60,9 +60,11 @@ export async function compressImage(
 	if (shrinkResponse.status === 401) {
 		throw new CompressError("TinyPNG API Key 無效", 401);
 	}
+
 	if (shrinkResponse.status === 429) {
 		throw new CompressError("TinyPNG 本月免費額度已用完 (500 次/月)", 429);
 	}
+
 	if (shrinkResponse.status !== 201) {
 		throw new CompressError(
 			`TinyPNG 壓縮失敗 (${shrinkResponse.status})`,
@@ -122,6 +124,7 @@ export async function testTinypngApiKey(apiKey: string): Promise<void> {
 	if (response.status === 401) {
 		throw new CompressError("TinyPNG API Key 無效", 401);
 	}
+
 	// 400 代表 key 有效，只是沒有送圖片
 	if (response.status !== 400) {
 		throw new CompressError(
