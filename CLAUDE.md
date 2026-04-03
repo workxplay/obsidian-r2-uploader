@@ -20,7 +20,7 @@ npm run lint:fix     # ESLint with auto-fix
 
 ## Architecture
 
-Five-module design, all under `src/`:
+All source code under `src/`:
 
 | Module | Role |
 |--------|------|
@@ -29,6 +29,9 @@ Five-module design, all under `src/`:
 | `uploader.ts` | Orchestrates compress → upload workflow, manages editor placeholders |
 | `compressor.ts` | TinyPNG HTTP API (POST to compress, GET to download result) |
 | `r2-client.ts` | Cloudflare R2 uploads via `aws4fetch` signed PUT requests |
+| `feedback.ts` | User-facing notices and error message formatting |
+| `types.ts` | Shared interfaces (`R2UploaderSettings`, `UploadResult`, `CompressResult`) and defaults |
+| `constants.ts` | MIME type sets, API URLs, R2 endpoint template |
 
 **Event flow:** paste/drop → intercept event → generate filename → insert placeholder → compress (if image) → upload to R2 → replace placeholder with final markdown link.
 
@@ -39,6 +42,10 @@ Five-module design, all under `src/`:
 - **`aws4fetch`** is the only production dependency (2.5KB gzip, Web Crypto API)
 - **No `any` types** — strict TypeScript throughout
 - Compression failures are non-fatal: fall back to uploading the original file
+
+## Version Bumping
+
+Three files must stay in sync: `package.json`, `manifest.json`, `versions.json`. The `versions.json` maps plugin version → minimum Obsidian version (currently `0.15.0`). After bumping, create a GitHub Release with the new tag.
 
 ## Design & Planning Documents
 
