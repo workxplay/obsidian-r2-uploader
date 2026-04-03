@@ -98,10 +98,7 @@ export default class R2UploaderPlugin extends Plugin {
 					const markdownLink = createMarkdownLink(result.url, file.name, isImage);
 					editor.setValue(content.replace(placeholder, markdownLink));
 				} else {
-					const errorText = isImage
-						? `![upload failed](${file.name})`
-						: `[upload failed: ${file.name}]()`;
-					editor.setValue(content.replace(placeholder, errorText));
+					editor.setValue(content.replace(placeholder, ""));
 					new Notice(`上傳失敗：${result.error}`, 8000);
 				}
 
