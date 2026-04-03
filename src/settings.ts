@@ -145,12 +145,15 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 				button.setButtonText("測試連線").setCta();
 				button.onClick(async () => {
 					const s = this.plugin.settings;
+
 					if (!s.r2AccountId || !s.r2AccessKeyId || !s.r2SecretAccessKey || !s.r2BucketName) {
 						new Notice("請先填寫所有 R2 欄位");
 						return;
 					}
+
 					button.setDisabled(true);
 					button.setButtonText("測試中...");
+
 					try {
 						await testR2Connection(s);
 						new Notice("R2 連線成功！");
@@ -199,8 +202,10 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 						new Notice("請先填寫 TinyPNG API Key");
 						return;
 					}
+
 					button.setDisabled(true);
 					button.setButtonText("驗證中...");
+
 					try {
 						await testTinypngApiKey(this.plugin.settings.tinypngApiKey);
 						new Notice("TinyPNG API Key 有效！");

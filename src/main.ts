@@ -53,14 +53,20 @@ export default class R2UploaderPlugin extends Plugin {
 	 * 處理多個檔案的上傳流程。
 	 * 對每個檔案：插入佔位文字 → 壓縮（如適用）→ 上傳 → 替換佔位文字。
 	 */
-	private handleFileEvent(evt: Event, files: FileList | null | undefined, editor: Editor): void {
+	private handleFileEvent(
+		evt: Event,
+		files: FileList | null | undefined,
+		editor: Editor,
+	): void {
 		if (evt.defaultPrevented) return;
 		if (!this.settings.autoUploadOnPaste) return;
 		if (!files || files.length === 0) return;
+
 		if (!isR2ConfigComplete(this.settings)) {
 			new Notice("Please complete r2 connection settings first.");
 			return;
 		}
+
 		evt.preventDefault();
 		void this.handleFiles(Array.from(files), editor);
 	}

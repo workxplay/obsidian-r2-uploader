@@ -22,9 +22,11 @@ export class R2UploadError extends Error {
  */
 function headersToRecord(headers: Headers): Record<string, string> {
 	const record: Record<string, string> = {};
+
 	headers.forEach((value, key) => {
 		record[key] = value;
 	});
+
 	return record;
 }
 
@@ -135,9 +137,11 @@ export async function testR2Connection(
 	if (response.status === 403) {
 		throw new R2UploadError("API Token 權限不足，請確認 Token 有 Object Read & Write 權限", 403);
 	}
+
 	if (response.status === 404) {
 		throw new R2UploadError(`Bucket "${settings.r2BucketName}" 不存在`, 404);
 	}
+
 	if (response.status !== 200) {
 		throw new R2UploadError(`R2 連線失敗 (${response.status})`, response.status);
 	}
