@@ -73,7 +73,7 @@ export async function compressImage(
 	// 從 response headers 取得壓縮結果的下載 URL
 	const outputUrl = shrinkResponse.headers["location"];
 	if (!outputUrl) {
-		throw new CompressError("TinyPNG 回應缺少 Location header");
+		throw new CompressError("TinyPNG 壓縮回應異常，請稍後再試");
 	}
 
 	const shrinkData = shrinkResponse.json as TinypngShrinkResponse;

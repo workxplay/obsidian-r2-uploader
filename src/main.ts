@@ -44,7 +44,7 @@ export default class R2UploaderPlugin extends Plugin {
 			id: "upload-clipboard-files",
 			name: "Upload clipboard files to cloudflare r2",
 			editorCallback: (editor: Editor) => {
-				new Notice("請使用 Ctrl/Cmd+V 貼上檔案來上傳");
+				new Notice("請先複製檔案再貼上");
 			},
 		});
 	}
@@ -63,7 +63,7 @@ export default class R2UploaderPlugin extends Plugin {
 		if (!files || files.length === 0) return;
 
 		if (!isR2ConfigComplete(this.settings)) {
-			new Notice("Please complete r2 connection settings first.");
+			new Notice("請先完成 R2 連線設定"); // eslint-disable-line obsidianmd/ui/sentence-case
 			return;
 		}
 
@@ -97,7 +97,7 @@ export default class R2UploaderPlugin extends Plugin {
 				editor.setValue(content.replace(placeholder, markdownLink));
 			} else {
 				editor.setValue(content.replace(placeholder, ""));
-				new Notice(`上傳失敗：${result.error}`, 8000);
+				new Notice(`上傳失敗：${result.error}`, 5000);
 			}
 		}
 
@@ -109,7 +109,7 @@ export default class R2UploaderPlugin extends Plugin {
 			new Notice(`已上傳 ${successCount} 個檔案`, 3000);
 		} else {
 			new Notice(
-				`上傳完成：${successCount} 成功，${failCount} 失敗`,
+				`上傳完成：${successCount} 成功 / ${failCount} 失敗`,
 				5000,
 			);
 		}

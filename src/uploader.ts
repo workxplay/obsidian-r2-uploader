@@ -70,7 +70,7 @@ export function createPlaceholder(): string {
 		.toString(36)
 		.substring(2, 6)}`;
 
-	return `![Uploading file... _${id}]()`;
+	return `![Uploading... _${id}]()`;
 }
 
 /**
@@ -132,13 +132,13 @@ export async function processFile(
 				(1 - compressed.compressedSize / compressed.originalSize) * 100,
 			);
 			new Notice(
-				`壓縮完成：${file.name} (節省 ${savedPercent}%)`,
+				`${file.name} 已壓縮 (節省 ${savedPercent}%)`,
 				3000,
 			);
 		} catch (err) {
 			// 壓縮失敗不中斷流程，用原檔繼續上傳
 			if (err instanceof CompressError) {
-				new Notice(`壓縮失敗，使用原檔上傳：${err.message}`, 5000);
+				new Notice(`壓縮失敗，改用原檔：${err.message}`, 5000);
 			}
 		}
 	}
