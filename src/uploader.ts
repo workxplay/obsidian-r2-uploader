@@ -66,7 +66,8 @@ export function isImageType(mimeType: string): boolean {
  * 空括號避免 Obsidian 嘗試載入不存在的檔案。
  */
 export function createPlaceholder(fileName: string): string {
-	return `![Uploading ${fileName}...]()`;
+	const id = Math.random().toString(36).substring(2, 6);
+	return `![Uploading ${fileName} #${id}...]()`;
 }
 
 /**
@@ -83,6 +84,10 @@ export function createMarkdownLink(
 		return `![](${url})`;
 	}
 	return `[${fileName}](${url})`;
+}
+
+function formatProgressTag(progress?: { current: number; total: number }): string {
+	return progress && progress.total > 1 ? ` [${progress.current}/${progress.total}]` : "";
 }
 
 /**
@@ -128,16 +133,14 @@ export async function processFile(
 			const savedPercent = Math.round(
 				(1 - compressed.compressedSize / compressed.originalSize) * 100,
 			);
-			const progressTag = progress && progress.total > 1 ? ` [${progress.current}/${progress.total}]` : "";
 			new Notice(
-				`${file.name} 已壓縮 (節省 ${savedPercent}%)${progressTag}`,
+				`${file.name} 已壓縮 (節省 ${savedPercent}%)${formatProgressTag(progress)}`,
 				3000,
 			);
 		} catch (err) {
 			// 壓縮失敗不中斷流程，用原檔繼續上傳
 			if (err instanceof CompressError) {
-				const tag = progress && progress.total > 1 ? ` [${progress.current}/${progress.total}]` : "";
-				new Notice(`壓縮失敗，改用原檔：${err.message}${tag}`, 5000);
+				new Notice(`壓縮失敗，改用原檔：${err.message}${formatProgressTag(progress)}`, 5000);
 			}
 		}
 	}

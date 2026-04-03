@@ -90,19 +90,22 @@ export default class R2UploaderPlugin extends Plugin {
 			),
 		);
 
+		let content = editor.getValue();
+
 		for (let i = 0; i < entries.length; i++) {
 			const { placeholder, file, isImage } = entries[i]!;
 			const result = results[i]!;
-			const content = editor.getValue();
 
 			if (result.success && result.url) {
 				const markdownLink = createMarkdownLink(result.url, file.name, isImage);
-				editor.setValue(content.replace(placeholder, markdownLink));
+				content = content.replace(placeholder, markdownLink);
 			} else {
-				editor.setValue(content.replace(placeholder, ""));
+				content = content.replace(placeholder, "");
 				new Notice(`${file.name} 上傳失敗：${result.error}`, 5000);
 			}
 		}
+
+		editor.setValue(content);
 
 		// Step 3: 多檔時顯示總結通知，單檔不顯示
 		if (results.length > 1) {
