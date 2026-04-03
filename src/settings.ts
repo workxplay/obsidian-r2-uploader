@@ -124,7 +124,8 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 					.setPlaceholder("https://img.yourdomain.com")
 					.setValue(this.plugin.settings.r2PublicUrl)
 					.onChange(async (value) => {
-						this.plugin.settings.r2PublicUrl = value.trim().replace(/\/+$/, "");
+						const trimmed = value.trim().replace(/\/+$/, "");
+						this.plugin.settings.r2PublicUrl = /^https?:\/\//i.test(trimmed) ? trimmed : trimmed ? `https://${trimmed}` : "";
 						await this.plugin.saveSettings();
 					}),
 			);

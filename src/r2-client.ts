@@ -111,7 +111,8 @@ export async function uploadToR2(
 		);
 	}
 
-	const publicUrl = settings.r2PublicUrl.replace(/\/+$/, "");
+	const rawUrl = settings.r2PublicUrl.replace(/\/+$/, "");
+	const publicUrl = /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`;
 	return `${publicUrl}/${key}`;
 }
 
