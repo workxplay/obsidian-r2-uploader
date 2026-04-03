@@ -119,16 +119,17 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("Public URL")
 			.setDesc("自訂網域或 r2.dev 公開網址")
-			.addText((text) =>
+			.addText((text) => {
 				text
 					.setPlaceholder("https://img.yourdomain.com")
 					.setValue(this.plugin.settings.r2PublicUrl)
 					.onChange(async (value) => {
 						const trimmed = value.trim().replace(/\/+$/, "");
 						this.plugin.settings.r2PublicUrl = /^https?:\/\//i.test(trimmed) ? trimmed : trimmed ? `https://${trimmed}` : "";
+						text.setValue(this.plugin.settings.r2PublicUrl);
 						await this.plugin.saveSettings();
-					}),
-			);
+					});
+			});
 
 		new Setting(containerEl)
 			.setName("Upload Path")
