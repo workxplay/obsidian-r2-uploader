@@ -62,15 +62,11 @@ export function isImageType(mimeType: string): boolean {
 }
 
 /**
- * 產生佔位文字，格式：![Uploading file... _id]()
+ * 產生佔位文字，格式：![Uploading filename...]()
  * 空括號避免 Obsidian 嘗試載入不存在的檔案。
  */
-export function createPlaceholder(): string {
-	const id = `${Date.now().toString(36)}${Math.random()
-		.toString(36)
-		.substring(2, 6)}`;
-
-	return `![Uploading... _${id}]()`;
+export function createPlaceholder(fileName: string): string {
+	return `![Uploading ${fileName}...]()`;
 }
 
 /**
@@ -99,6 +95,7 @@ export function createMarkdownLink(
 export async function processFile(
 	file: File,
 	settings: R2UploaderSettings,
+	progress?: { current: number; total: number },
 ): Promise<UploadResult> {
 	const baseName = generateFileName(file.name);
 	const uploadPath = sanitizeUploadPath(settings.r2UploadPath);
@@ -131,14 +128,16 @@ export async function processFile(
 			const savedPercent = Math.round(
 				(1 - compressed.compressedSize / compressed.originalSize) * 100,
 			);
+			const progressTag = progress && progress.total > 1 ? ` [${progress.current}/${progress.total}]` : "";
 			new Notice(
-				`${file.name} 已壓縮 (節省 ${savedPercent}%)`,
+				`${file.name} 已壓縮 (節省 ${savedPercent}%)${progressTag}`,
 				3000,
 			);
 		} catch (err) {
 			// 壓縮失敗不中斷流程，用原檔繼續上傳
 			if (err instanceof CompressError) {
-				new Notice(`壓縮失敗，改用原檔：${err.message}`, 5000);
+				const tag = progress && progress.total > 1 ? ` [${progress.current}/${progress.total}]` : "";
+				new Notice(`壓縮失敗，改用原檔：${err.message}${tag}`, 5000);
 			}
 		}
 	}

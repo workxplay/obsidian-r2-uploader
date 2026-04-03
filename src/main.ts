@@ -77,14 +77,17 @@ export default class R2UploaderPlugin extends Plugin {
 		// Step 1: 為每個檔案插入佔位文字
 		for (const file of files) {
 			const isImage = isImageType(file.type);
-			const placeholder = createPlaceholder();
+			const placeholder = createPlaceholder(file.name);
 			entries.push({ placeholder, file, isImage });
 			editor.replaceSelection(`${placeholder}\n`);
 		}
 
 		// Step 2: 並行上傳，但循序替換 placeholder（避免 race condition）
+		const total = entries.length;
 		const results = await Promise.all(
-			entries.map(({ file }) => processFile(file, this.settings)),
+			entries.map(({ file }, index) =>
+				processFile(file, this.settings, { current: index + 1, total }),
+			),
 		);
 
 		for (let i = 0; i < entries.length; i++) {
@@ -97,21 +100,23 @@ export default class R2UploaderPlugin extends Plugin {
 				editor.setValue(content.replace(placeholder, markdownLink));
 			} else {
 				editor.setValue(content.replace(placeholder, ""));
-				new Notice(`上傳失敗：${result.error}`, 5000);
+				new Notice(`${file.name} 上傳失敗：${result.error}`, 5000);
 			}
 		}
 
-		// Step 3: 顯示總結通知
-		const successCount = results.filter((r) => r.success).length;
-		const failCount = results.length - successCount;
+		// Step 3: 多檔時顯示總結通知，單檔不顯示
+		if (results.length > 1) {
+			const successCount = results.filter((r) => r.success).length;
+			const failCount = results.length - successCount;
 
-		if (failCount === 0) {
-			new Notice(`已上傳 ${successCount} 個檔案`, 3000);
-		} else {
-			new Notice(
-				`上傳完成：${successCount} 成功 / ${failCount} 失敗`,
-				5000,
-			);
+			if (failCount === 0) {
+				new Notice(`已上傳 ${successCount} 個檔案`, 3000);
+			} else {
+				new Notice(
+					`上傳完成：${successCount} 成功 / ${failCount} 失敗`,
+					5000,
+				);
+			}
 		}
 	}
 
