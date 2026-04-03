@@ -62,7 +62,7 @@ export function createPlaceholder(
 	isImage: boolean,
 ): string {
 	const id = Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
-	return `<!--uploading:${id}-->`;
+	return `![Uploading file..._${id}]()`;
 }
 
 /**
