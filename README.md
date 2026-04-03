@@ -37,6 +37,7 @@
 2. Settings → BRAT → Add Beta plugin
 3. 輸入：`https://github.com/pamcy/obsidian-r2-uploader`
 4. BRAT 會自動下載最新 Release 並安裝
+5. 安裝完成後，重新載入 Obsidian（Cmd/Ctrl+R）讓 plugin 生效
 
 ### Community Plugins（正式上架專用）
 
@@ -46,6 +47,7 @@
 2. 關閉 Restricted mode
 3. 點選 Browse，搜尋 **R2 Uploader**
 4. 點選 Install → Enable
+5. 重新載入 Obsidian（Cmd/Ctrl+R）讓 plugin 生效
 
 ## 使用前準備
 
