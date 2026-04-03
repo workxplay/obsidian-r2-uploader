@@ -6,6 +6,17 @@ import { IMAGE_TYPES } from "./constants";
 import type { R2UploaderSettings, UploadResult } from "./types";
 
 /**
+ * 清理上傳路徑前綴。
+ * 移除前後 /、連續 /、不允許的字元。
+ */
+export function sanitizeUploadPath(path: string): string {
+	return path
+		.replace(/[^a-zA-Z0-9\-_./]/g, "")
+		.replace(/\/{2,}/g, "/")
+		.replace(/^\/|\/$/g, "");
+}
+
+/**
  * 將檔名清理為安全的 URL 路徑。
  * 移除特殊字元、空格轉 -、轉小寫。
  */
@@ -92,7 +103,9 @@ export async function processFile(
 	file: File,
 	settings: R2UploaderSettings,
 ): Promise<UploadResult> {
-	const fileName = generateFileName(file.name);
+	const baseName = generateFileName(file.name);
+	const uploadPath = sanitizeUploadPath(settings.r2UploadPath);
+	const fileName = uploadPath ? `${uploadPath}/${baseName}` : baseName;
 	const mimeType = file.type || "application/octet-stream";
 
 	let fileData: ArrayBuffer;

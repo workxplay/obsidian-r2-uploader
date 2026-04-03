@@ -8,6 +8,7 @@ export interface R2UploaderSettings {
 	r2SecretAccessKey: string;
 	r2BucketName: string;
 	r2PublicUrl: string;
+	r2UploadPath: string;
 
 	// TinyPNG
 	tinypngApiKey: string;
@@ -23,6 +24,7 @@ export const DEFAULT_SETTINGS: R2UploaderSettings = {
 	r2SecretAccessKey: "",
 	r2BucketName: "",
 	r2PublicUrl: "",
+	r2UploadPath: "",
 	tinypngApiKey: "",
 	autoUploadOnPaste: true,
 	compressBeforeUpload: true,

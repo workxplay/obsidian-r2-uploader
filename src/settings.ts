@@ -122,6 +122,23 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
+			.setName("Upload Path")
+			.setDesc("上傳路徑前綴，留空則上傳到根目錄 (例如：blog/images)")
+			.addText((text) =>
+				text
+					.setPlaceholder("例如：blog/images")
+					.setValue(this.plugin.settings.r2UploadPath)
+					.onChange(async (value) => {
+						this.plugin.settings.r2UploadPath = value
+							.replace(/[^a-zA-Z0-9\-_./]/g, "")
+							.replace(/\/{2,}/g, "/")
+							.replace(/^\/|\/$/g, "");
+						text.setValue(this.plugin.settings.r2UploadPath);
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
 			.setName("驗證 R2 連線")
 			.setDesc("測試憑證和 Bucket 是否設定正確")
 			.addButton((button) => {
