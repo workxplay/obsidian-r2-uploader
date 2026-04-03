@@ -1,4 +1,4 @@
-# Obsidian R2 Uploader — 發布操作指南
+# Obsidian R2 Uploader — Plugin 發布操作指南
 
 > 最後更新：2026-04-03
 
