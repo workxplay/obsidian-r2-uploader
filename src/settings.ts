@@ -116,20 +116,40 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		new Setting(containerEl)
+		let publicUrlErrorEl: HTMLElement | null = null;
+
+		const updatePublicUrlError = (settingEl: HTMLElement, url: string) => {
+			const hasError = Boolean(url) && !/^https?:\/\//i.test(url);
+
+			if (hasError && !publicUrlErrorEl) {
+				publicUrlErrorEl = settingEl.createEl("div", {
+					text: "請以 https:// 開頭",
+					cls: "setting-error-message",
+				});
+				settingEl.addClass("has-error");
+			} else if (!hasError && publicUrlErrorEl) {
+				publicUrlErrorEl.remove();
+				publicUrlErrorEl = null;
+				settingEl.removeClass("has-error");
+			}
+		};
+
+		const publicUrlSetting = new Setting(containerEl)
 			.setName("Public URL")
 			.setDesc("自訂網域或 r2.dev 公開網址")
-			.addText((text) => {
+			.addText((text) =>
 				text
 					.setPlaceholder("https://img.yourdomain.com")
 					.setValue(this.plugin.settings.r2PublicUrl)
 					.onChange(async (value) => {
 						const trimmed = value.trim().replace(/\/+$/, "");
-						this.plugin.settings.r2PublicUrl = /^https?:\/\//i.test(trimmed) ? trimmed : trimmed ? `https://${trimmed}` : "";
-						text.setValue(this.plugin.settings.r2PublicUrl);
+						this.plugin.settings.r2PublicUrl = trimmed;
 						await this.plugin.saveSettings();
-					});
-			});
+						updatePublicUrlError(publicUrlSetting.settingEl, trimmed);
+					}),
+			);
+
+		updatePublicUrlError(publicUrlSetting.settingEl, this.plugin.settings.r2PublicUrl);
 
 		new Setting(containerEl)
 			.setName("Upload Path")

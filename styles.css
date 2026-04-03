@@ -29,3 +29,14 @@
 	width: 100%;
 	min-width: 200px;
 }
+
+.r2-uploader-settings .setting-item.has-error {
+	flex-wrap: wrap;
+}
+
+.r2-uploader-settings .setting-error-message {
+	color: var(--text-error);
+	font-size: var(--font-smallest);
+	margin-top: 4px;
+	width: 100%;
+}
