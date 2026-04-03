@@ -49,6 +49,7 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
+		containerEl.addClass("r2-uploader-settings");
 
 		// ── Section 1: Cloudflare R2 ──
 		new Setting(containerEl).setName("Cloudflare R2").setHeading();
