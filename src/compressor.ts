@@ -61,7 +61,7 @@ export async function compressImage(
 		throw new CompressError("TinyPNG API Key 無效", 401);
 	}
 	if (shrinkResponse.status === 429) {
-		throw new CompressError("TinyPNG 本月免費額度已用完（500 次/月）", 429);
+		throw new CompressError("TinyPNG 本月免費額度已用完 (500 次/月)", 429);
 	}
 	if (shrinkResponse.status !== 201) {
 		throw new CompressError(

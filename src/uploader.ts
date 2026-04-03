@@ -132,7 +132,7 @@ export async function processFile(
 				(1 - compressed.compressedSize / compressed.originalSize) * 100,
 			);
 			new Notice(
-				`壓縮完成：${file.name}（節省 ${savedPercent}%）`,
+				`壓縮完成：${file.name} (節省 ${savedPercent}%)`,
 				3000,
 			);
 		} catch (err) {

@@ -1,3 +1,15 @@
 .r2-uploader-settings .setting-item-heading .setting-item-name {
 	font-size: 1.25em;
 }
+
+.r2-uploader-settings .setting-item-heading:not(:first-child) {
+	margin-top: 1.5em;
+	padding-top: 1em;
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+.r2-uploader-settings .setting-item-control input[type="text"],
+.r2-uploader-settings .setting-item-control input[type="password"] {
+	width: 100%;
+	min-width: 200px;
+}
