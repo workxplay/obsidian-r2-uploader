@@ -56,7 +56,7 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Account ID")
-			.setDesc("Cloudflare 帳戶 ID，可在 R2 儀表板右側 Account Details 找到")
+			.setDesc("Cloudflare 帳戶 ID")
 			.addText((text) =>
 				text
 					.setPlaceholder("例如：a1b2c3d4e5f6...")
@@ -69,7 +69,7 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Access Key ID")
-			.setDesc("R2 API Token 的 Access Key ID")
+			.setDesc("R2 API Token Access Key ID")
 			.addText((text) => {
 				addPasswordToggle(text);
 				text
@@ -83,7 +83,7 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Secret Access Key")
-			.setDesc("R2 API Token 的 Secret Access Key（只會在建立時顯示一次）")
+			.setDesc("R2 API Token Secret Access Key")
 			.addText((text) => {
 				addPasswordToggle(text);
 				text
@@ -110,7 +110,7 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Public URL")
-			.setDesc("自訂網域或 r2.dev 公開網址（用於產生圖片連結）")
+			.setDesc("自訂網域或 r2.dev 公開網址 (用於產生圖片連結)")
 			.addText((text) =>
 				text
 					.setPlaceholder("例如：https://pub-xxx.r2.dev")
@@ -158,7 +158,7 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 						text: "tinypng.com/developers",
 						href: "https://tinypng.com/developers",
 					});
-					frag.appendText(" 免費申請（每月 500 次）");
+					frag.appendText(" 免費申請 (每月 500 次)");
 				}),
 			)
 			.addText((text) => {
@@ -201,7 +201,7 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("自動上傳")
-			.setDesc("貼上或拖放檔案時，自動上傳到 R2（關閉後需手動觸發）")
+			.setDesc("貼上或拖放檔案時，自動上傳到 R2 (關閉後需手動觸發)")
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.autoUploadOnPaste)
@@ -213,7 +213,7 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("上傳前壓縮")
-			.setDesc("上傳前透過 TinyPNG 壓縮圖片（需要有效的 API Key）")
+			.setDesc("上傳前透過 TinyPNG 壓縮圖片 (需要有效的 API Key)")
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.compressBeforeUpload)
