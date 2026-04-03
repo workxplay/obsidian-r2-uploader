@@ -1,6 +1,6 @@
 {
   "name": "obsidian-r2-uploader",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Automatically compress and upload images to Cloudflare R2 when pasting or dropping files in Obsidian.",
   "main": "main.js",
   "type": "module",

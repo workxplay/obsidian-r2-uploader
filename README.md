@@ -63,6 +63,20 @@ Obsidian plugin — 貼上或拖放檔案時，自動透過 [TinyPNG](https://ti
 
 也可透過 Command Palette (Cmd/Ctrl+P) 搜尋 **R2 Uploader** 手動觸發上傳。
 
+## 專案結構
+
+```text
+src/
+├── main.ts          # Plugin 進入點 — 註冊貼上/拖放事件、指令、設定頁
+├── settings.ts      # 設定 UI 與設定值持久化
+├── uploader.ts      # 壓縮 → 上傳流程，管理編輯器佔位文字
+├── compressor.ts    # TinyPNG HTTP API 壓縮
+├── r2-client.ts     # 透過 aws4fetch 簽章上傳至 Cloudflare R2
+├── feedback.ts      # 使用者通知與錯誤訊息
+├── types.ts         # 共用型別定義
+└── constants.ts     # 常數 (MIME types、檔案大小限制等)
+```
+
 ## 授權
 
 [MIT](LICENSE)
