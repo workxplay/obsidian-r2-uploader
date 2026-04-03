@@ -49,8 +49,6 @@ export interface UploadResult {
 export interface CompressResult {
 	/** 壓縮後的檔案 ArrayBuffer */
 	data: ArrayBuffer;
-	/** 是否有進行壓縮（false = 用原檔） */
-	compressed: boolean;
 	/** 原始大小 */
 	originalSize: number;
 	/** 壓縮後大小 */

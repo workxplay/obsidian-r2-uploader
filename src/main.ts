@@ -1,5 +1,4 @@
 import { Editor, Notice, Plugin } from "obsidian";
-import type { MarkdownView, MarkdownFileInfo } from "obsidian";
 import { R2UploaderSettingTab } from "./settings";
 import {
 	processFile,
@@ -24,19 +23,8 @@ export default class R2UploaderPlugin extends Plugin {
 		this.registerEvent(
 			this.app.workspace.on(
 				"editor-paste",
-				(evt: ClipboardEvent, editor: Editor, _info: MarkdownView | MarkdownFileInfo) => {
-					if (evt.defaultPrevented) return;
-					if (!this.settings.autoUploadOnPaste) return;
-
-					const files = evt.clipboardData?.files;
-					if (!files || files.length === 0) return;
-					if (!isR2ConfigComplete(this.settings)) {
-						new Notice("R2 Uploader：請先在設定中填寫 R2 連線資訊");
-						return;
-					}
-
-					evt.preventDefault();
-					this.handleFiles(Array.from(files), editor);
+				(evt: ClipboardEvent, editor: Editor) => {
+					this.handleFileEvent(evt, evt.clipboardData?.files, editor);
 				},
 			),
 		);
@@ -45,19 +33,8 @@ export default class R2UploaderPlugin extends Plugin {
 		this.registerEvent(
 			this.app.workspace.on(
 				"editor-drop",
-				(evt: DragEvent, editor: Editor, _info: MarkdownView | MarkdownFileInfo) => {
-					if (evt.defaultPrevented) return;
-					if (!this.settings.autoUploadOnPaste) return;
-
-					const files = evt.dataTransfer?.files;
-					if (!files || files.length === 0) return;
-					if (!isR2ConfigComplete(this.settings)) {
-						new Notice("R2 Uploader：請先在設定中填寫 R2 連線資訊");
-						return;
-					}
-
-					evt.preventDefault();
-					this.handleFiles(Array.from(files), editor);
+				(evt: DragEvent, editor: Editor) => {
+					this.handleFileEvent(evt, evt.dataTransfer?.files, editor);
 				},
 			),
 		);
@@ -76,35 +53,47 @@ export default class R2UploaderPlugin extends Plugin {
 	 * 處理多個檔案的上傳流程。
 	 * 對每個檔案：插入佔位文字 → 壓縮（如適用）→ 上傳 → 替換佔位文字。
 	 */
+	private handleFileEvent(evt: Event, files: FileList | null | undefined, editor: Editor): void {
+		if (evt.defaultPrevented) return;
+		if (!this.settings.autoUploadOnPaste) return;
+		if (!files || files.length === 0) return;
+		if (!isR2ConfigComplete(this.settings)) {
+			new Notice("R2 Uploader：請先在設定中填寫 R2 連線資訊");
+			return;
+		}
+		evt.preventDefault();
+		this.handleFiles(Array.from(files), editor);
+	}
+
 	private async handleFiles(files: File[], editor: Editor): Promise<void> {
-		const placeholders: { placeholder: string; file: File; isImage: boolean }[] = [];
+		const entries: { placeholder: string; file: File; isImage: boolean }[] = [];
 
 		// Step 1: 為每個檔案插入佔位文字
 		for (const file of files) {
 			const isImage = isImageType(file.type);
-			const placeholder = createPlaceholder(file.name, isImage);
-			placeholders.push({ placeholder, file, isImage });
+			const placeholder = createPlaceholder();
+			entries.push({ placeholder, file, isImage });
 			editor.replaceSelection(placeholder + "\n");
 		}
 
-		// Step 2: 並行處理所有檔案
+		// Step 2: 並行上傳，但循序替換 placeholder（避免 race condition）
 		const results = await Promise.all(
-			placeholders.map(async ({ placeholder, file, isImage }) => {
-				const result = await processFile(file, this.settings);
-
-				// 替換佔位文字
-				const content = editor.getValue();
-				if (result.success && result.url) {
-					const markdownLink = createMarkdownLink(result.url, file.name, isImage);
-					editor.setValue(content.replace(placeholder, markdownLink));
-				} else {
-					editor.setValue(content.replace(placeholder, ""));
-					new Notice(`上傳失敗：${result.error}`, 8000);
-				}
-
-				return result;
-			}),
+			entries.map(({ file }) => processFile(file, this.settings)),
 		);
+
+		for (let i = 0; i < entries.length; i++) {
+			const { placeholder, file, isImage } = entries[i]!;
+			const result = results[i]!;
+			const content = editor.getValue();
+
+			if (result.success && result.url) {
+				const markdownLink = createMarkdownLink(result.url, file.name, isImage);
+				editor.setValue(content.replace(placeholder, markdownLink));
+			} else {
+				editor.setValue(content.replace(placeholder, ""));
+				new Notice(`上傳失敗：${result.error}`, 8000);
+			}
+		}
 
 		// Step 3: 顯示總結通知
 		const successCount = results.filter((r) => r.success).length;

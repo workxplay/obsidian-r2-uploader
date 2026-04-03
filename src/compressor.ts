@@ -95,7 +95,6 @@ export async function compressImage(
 
 	return {
 		data: downloadResponse.arrayBuffer,
-		compressed: true,
 		originalSize: shrinkData.input.size,
 		compressedSize: shrinkData.output.size,
 	};

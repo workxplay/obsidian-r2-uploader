@@ -9,6 +9,7 @@ import {
 import type R2UploaderPlugin from "./main";
 import { testR2Connection } from "./r2-client";
 import { testTinypngApiKey } from "./compressor";
+import { sanitizeUploadPath } from "./uploader";
 
 /**
  * 將 TextComponent 轉為密碼欄位，並加上顯示/隱藏切換按鈕。
@@ -129,10 +130,7 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 					.setPlaceholder("例如：assets")
 					.setValue(this.plugin.settings.r2UploadPath)
 					.onChange(async (value) => {
-						this.plugin.settings.r2UploadPath = value
-							.replace(/[^a-zA-Z0-9\-_./]/g, "")
-							.replace(/\/{2,}/g, "/")
-							.replace(/^\/|\/$/g, "");
+						this.plugin.settings.r2UploadPath = sanitizeUploadPath(value);
 						text.setValue(this.plugin.settings.r2UploadPath);
 						await this.plugin.saveSettings();
 					}),

@@ -2,7 +2,6 @@ import { Notice } from "obsidian";
 import { uploadToR2 } from "./r2-client";
 import { compressImage, isCompressible, CompressError } from "./compressor";
 import { R2UploadError } from "./r2-client";
-import { IMAGE_TYPES } from "./constants";
 import type { R2UploaderSettings, UploadResult } from "./types";
 
 /**
@@ -60,18 +59,14 @@ export function generateFileName(originalName: string): string {
  * 判斷 MIME type 是否為圖片。
  */
 export function isImageType(mimeType: string): boolean {
-	return IMAGE_TYPES.has(mimeType) || mimeType.startsWith("image/");
+	return mimeType.startsWith("image/");
 }
 
 /**
- * 產生佔位文字。
- * 圖片：![uploading...](placeholder-{id})
- * 非圖片：[uploading filename...](placeholder-{id})
+ * 產生佔位文字，格式：![Uploading file... _id]()
+ * 空括號避免 Obsidian 嘗試載入不存在的檔案。
  */
-export function createPlaceholder(
-	fileName: string,
-	isImage: boolean,
-): string {
+export function createPlaceholder(): string {
 	const id = Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
 	return `![Uploading file... _${id}]()`;
 }
