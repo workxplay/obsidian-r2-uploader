@@ -123,10 +123,10 @@ export class R2UploaderSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Upload Path")
-			.setDesc("R2 bucket 中的上傳路徑前綴 (例如：blog/images)，留空則上傳到 bucket 根目錄")
+			.setDesc("R2 bucket 中的上傳路徑前綴 (例如：assets, assets/images)，留空則上傳到 bucket 根目錄")
 			.addText((text) =>
 				text
-					.setPlaceholder("例如：blog/images")
+					.setPlaceholder("例如：assets")
 					.setValue(this.plugin.settings.r2UploadPath)
 					.onChange(async (value) => {
 						this.plugin.settings.r2UploadPath = value
