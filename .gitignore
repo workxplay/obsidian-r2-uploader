@@ -8,9 +8,6 @@ main.js
 # obsidian
 data.json
 
-# Claude Code
-.claude/settings.local.json
-
 # IDE
 .vscode
 *.iml
