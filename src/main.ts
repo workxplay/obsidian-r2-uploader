@@ -123,7 +123,9 @@ export default class R2UploaderPlugin extends Plugin {
 			}
 		}
 
+		const cursor = editor.getCursor();
 		editor.setValue(content);
+		editor.setCursor(cursor);
 
 		// Step 3: 多檔時顯示總結通知，單檔不顯示
 		if (results.length > 1) {
